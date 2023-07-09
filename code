@@ -1,0 +1,42 @@
+import cv2
+import numpy as np
+from skimage import color, segmentation, exposure
+import matplotlib.pyplot as plt
+# Load the input image
+image = cv2.imread("/content/WhatsApp Image 2023-06-15 at 12.05.47 
+PM.jpeg")
+# Convert the image to grayscale
+gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+# Apply the Felzenszwalb algorithm for segmentation
+segmentation_results = segmentation.felzenszwalb(gray_image, scale=85, 
+sigma=0.2)
+# Get the unique segments in the segmentation result
+segments = np.unique(segmentation_results)
+# Set the threshold value for segment merging
+threshold =50
+# Create a blank image for the segmented numbers
+segmented_image = np.zeros_like(image, dtype=np.uint8)
+# Assign different colors to each segment
+num_colors = len(segments)
+colors = plt.cm.get_cmap('tab10', num_colors)
+for i, segment in enumerate(segments):
+ color = np.array(colors(i)[:3]) * 255
+ segmented_image[segmentation_results == segment] = color
+# Merge segments based on the threshold
+for i, segment in enumerate(segments):
+ segment_pixels = gray_image[segmentation_results == segment]
+ mean_intensity = np.mean(segment_pixels)
+ if mean_intensity <= threshold:
+ segmented_image[segmentation_results == segment] = 0
+# Display the original image
+plt.subplot(1, 2, 1)
+plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+plt.title("Original Image")
+plt.axis("off")
+# Display the segmented numbers
+plt.subplot(1, 2, 2)
+plt.imshow(cv2.cvtColor(segmented_image, cv2.COLOR_BGR2RGB))
+plt.title("Segmented Numbers")
+plt.axis("off")
+plt.tight_layout()
+plt.show()
